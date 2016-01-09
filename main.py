@@ -8,6 +8,7 @@ from oauth2client import client
 from oauth2client import tools
 import Keys.cal_id as cal_id
 import datetime
+from datetime import date, time
 
 try:
     import argparse
@@ -44,10 +45,17 @@ def main():
 
     now = datetime.datetime.now().isoformat() + 'Z' 
 
-    # Initiate event query
+    today_beginning = datetime.datetime.combine(date.today(), time())
+    today_end = today_beginning + datetime.timedelta(2, 0)# - datetime.timedelta(0, 1)
+
+    today_beginning = today_beginning.isoformat() + 'Z'
+    today_end = today_end.isoformat() + 'Z'
+
+    print(today_end, today_beginning)
+
+    # Initiate event request
     eventsResult = service.events().list(
-        calendarId=cal_id.calendarId, timeMin=now, maxResults=10, singleEvents=True,
-        orderBy='startTime').execute()
+        calendarId=cal_id.calendarId, timeMin=today_beginning, timeMax=today_end).execute()
 
     events = eventsResult.get('items', [])
 
