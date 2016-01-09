@@ -6,7 +6,7 @@ from apiclient import discovery
 import oauth2client
 from oauth2client import client
 from oauth2client import tools
-
+import Keys.cal_id as cal_id
 import datetime
 
 try:
@@ -38,24 +38,26 @@ def get_credentials():
     return credentials
 
 def main():
-    print(flags)
     credentials = get_credentials()
     http = credentials.authorize(httplib2.Http())
     service = discovery.build('calendar', 'v3', http=http)
 
-    now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
-    print('Getting the upcoming 10 events')
+    now = datetime.datetime.now().isoformat() + 'Z' 
+
+    # Initiate event query
     eventsResult = service.events().list(
-        calendarId='primary', timeMin=now, maxResults=10, singleEvents=True,
+        calendarId=cal_id.calendarId, timeMin=now, maxResults=10, singleEvents=True,
         orderBy='startTime').execute()
+
     events = eventsResult.get('items', [])
 
     if not events:
         print('No upcoming events found.')
-    for event in events:
-        start = event['start'].get('dateTime', event['start'].get('date'))
-        print(start, event['summary'])
-
+    else:
+        print('Events scheduled for today:')
+        for event in events:
+            start = event['start'].get('dateTime', event['start'].get('date'))
+            print(start, event['summary'])
 
 if __name__ == '__main__':
     main()
