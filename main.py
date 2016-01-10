@@ -9,6 +9,7 @@ from oauth2client import tools
 import Keys.cal_id as cal_id
 import datetime
 from datetime import date, time
+import time as sleeper
 
 try:
     import argparse
@@ -38,20 +39,12 @@ def get_credentials():
             credentials = tools.run_flow(flow, store, flags)
     return credentials
 
-def main():
-    credentials = get_credentials()
-    http = credentials.authorize(httplib2.Http())
-    service = discovery.build('calendar', 'v3', http=http)
-
-    now = datetime.datetime.now().isoformat() + 'Z' 
-
+def pollingFunction(credentials, http, service):
     today_beginning = datetime.datetime.combine(date.today(), time())
     today_end = today_beginning + datetime.timedelta(1, 0) - datetime.timedelta(0, 1)
 
     today_beginning = today_beginning.isoformat() + 'Z'
     today_end = today_end.isoformat() + 'Z'
-
-    print(today_end, today_beginning)
 
     # Initiate event request
     eventsResult = service.events().list(
@@ -68,6 +61,22 @@ def main():
             if event['start']['dateTime'][:10] == today_beginning[:10]:
                 start = event['start'].get('dateTime', event['start'].get('date'))
                 print(start, event['summary'])    
-                
-if __name__ == '__main__':
+
+def clear():
+    os.system('cls')
+
+def main():
+    credentials = get_credentials()
+    http = credentials.authorize(httplib2.Http())
+    service = discovery.build('calendar', 'v3', http=http)
+
+
+    pollingFunction(credentials, http, service)
+
+    while True:
+        sleeper.sleep(50)
+        clear()
+        pollingFunction(credentials, http, service)
+
+if __name__ == "__main__":
     main()
