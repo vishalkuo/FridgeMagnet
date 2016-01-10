@@ -55,8 +55,12 @@ def pollingFunction():
         calendarId=cal_id.calendarId, timeMax=today_end, singleEvents=True,
         orderBy='startTime').execute()
 
-    events = eventsResult.get('items', [])
+    return (eventsResult.get('items', []), today_beginning)
 
+def clear():
+    os.system('cls' if os.name=='nt' else 'clear')
+
+def displayOnConsole(events, today_beginning):
     if not events:
         print('No upcoming events found.')
     else:
@@ -66,17 +70,17 @@ def pollingFunction():
                 start = event['start'].get('dateTime', event['start'].get('date'))
                 print(start, event['summary'])    
 
-def clear():
-    os.system('cls' if os.name=='nt' else 'clear')
 
 def main():
-
-    pollingFunction()
+    outTup = pollingFunction()
+    displayOnConsole(outTup[0], outTup[1])
 
     while True:
         sleeper.sleep(50)
         clear()
-        pollingFunction(credentials, http, service)
+        outTup = pollingFunction()
+        displayOnConsole(outTup[0], outTup[1])
+
 
 if __name__ == "__main__":
     main()
