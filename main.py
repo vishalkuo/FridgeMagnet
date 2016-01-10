@@ -46,7 +46,7 @@ def main():
     now = datetime.datetime.now().isoformat() + 'Z' 
 
     today_beginning = datetime.datetime.combine(date.today(), time())
-    today_end = today_beginning + datetime.timedelta(2, 0)# - datetime.timedelta(0, 1)
+    today_end = today_beginning + datetime.timedelta(1, 0) - datetime.timedelta(0, 1)
 
     today_beginning = today_beginning.isoformat() + 'Z'
     today_end = today_end.isoformat() + 'Z'
@@ -55,7 +55,8 @@ def main():
 
     # Initiate event request
     eventsResult = service.events().list(
-        calendarId=cal_id.calendarId, timeMin=today_beginning, timeMax=today_end).execute()
+        calendarId=cal_id.calendarId, timeMax=today_end, singleEvents=True,
+        orderBy='startTime').execute()
 
     events = eventsResult.get('items', [])
 
@@ -64,8 +65,9 @@ def main():
     else:
         print('Events scheduled for today:')
         for event in events:
-            start = event['start'].get('dateTime', event['start'].get('date'))
-            print(start, event['summary'])
-
+            if event['start']['dateTime'][:10] == today_beginning[:10]:
+                start = event['start'].get('dateTime', event['start'].get('date'))
+                print(start, event['summary'])    
+                
 if __name__ == '__main__':
     main()
