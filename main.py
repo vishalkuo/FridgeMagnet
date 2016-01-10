@@ -39,7 +39,11 @@ def get_credentials():
             credentials = tools.run_flow(flow, store, flags)
     return credentials
 
-def pollingFunction(credentials, http, service):
+def pollingFunction():
+    credentials = get_credentials()
+    http = credentials.authorize(httplib2.Http())
+    service = discovery.build('calendar', 'v3', http=http)
+
     today_beginning = datetime.datetime.combine(date.today(), time())
     today_end = today_beginning + datetime.timedelta(1, 0) - datetime.timedelta(0, 1)
 
@@ -63,15 +67,11 @@ def pollingFunction(credentials, http, service):
                 print(start, event['summary'])    
 
 def clear():
-    os.system('cls')
+    os.system('cls' if os.name=='nt' else 'clear')
 
 def main():
-    credentials = get_credentials()
-    http = credentials.authorize(httplib2.Http())
-    service = discovery.build('calendar', 'v3', http=http)
 
-
-    pollingFunction(credentials, http, service)
+    pollingFunction()
 
     while True:
         sleeper.sleep(50)
