@@ -63,32 +63,36 @@ def clear():
 
 def parseEvents(events, today_beginning):
     today_counter = 0
-    summary_list = ''
+    summary_list = []
     for event in events:
         dateStr = 'dateTime' if 'dateTime' in event['start'] else 'date'
         if event['start'][dateStr][:10] == today_beginning[:10]:
             start = event['start'].get('dateTime', event['start'].get('date'))
             today_counter = today_counter + 1
-            summary_list = summary_list + start + ' '  +event['summary'] + '\n'
+            summary_list.append((start,event['summary']))
     if today_counter == 0:
         print('No events found for today.')
     else:
         print('Events scheduled for today:')
 	#Remove last newline
-        print(summary_list[:-1])        
+        return summary_list
 
+def disp_loop(arr):
+	for item in arr:
+		lcd.write_to_LCD(item[0][11:], item[1])
+		sleeper.sleep(5)
 
 def main():
     outTup = pollingFunction()
-    parseEvents(outTup[0], outTup[1])
-    lcd.write_to_LCD("TST", outTup[1][11:])
+    retArr = parseEvents(outTup[0], outTup[1])
+    disp_loop(retArr)
     while True:
         sleeper.sleep(50)
 	lcd.clear_LCD()
         clear()
         outTup = pollingFunction()
         parseEvents(outTup[0], outTup[1])
-	lcd.write_to_LCD(str(outTup[0]), outTup[1])
+	disp_loop(retArr)
 	
 
 
