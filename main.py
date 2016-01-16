@@ -61,14 +61,19 @@ def clear():
     os.system('cls' if os.name=='nt' else 'clear')
 
 def displayOnConsole(events, today_beginning):
-    if not events:
-        print('No upcoming events found.')
+    today_counter = 0
+    summary_list = ''
+    for event in events:
+        dateStr = 'dateTime' if 'dateTime' in event['start'] else 'date'
+        if event['start'][dateStr][:10] == today_beginning[:10]:
+            start = event['start'].get('dateTime', event['start'].get('date'))
+            today_counter = today_counter + 1
+            summary_list = summary_list + start + ' '  +event['summary'] + '\n'
+    if today_counter == 0:
+        print('No events found for today.')
     else:
         print('Events scheduled for today:')
-        for event in events:
-            if event['start']['dateTime'][:10] == today_beginning[:10]:
-                start = event['start'].get('dateTime', event['start'].get('date'))
-                print(start, event['summary'])    
+        print(summary_list)        
 
 
 def main():
