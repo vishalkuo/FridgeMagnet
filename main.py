@@ -10,6 +10,7 @@ import Keys.cal_id as cal_id
 import datetime
 from datetime import date, time
 import time as sleeper
+import Hardware.PI2LCD as lcd
 
 try:
     import argparse
@@ -60,7 +61,7 @@ def pollingFunction():
 def clear():
     os.system('cls' if os.name=='nt' else 'clear')
 
-def displayOnConsole(events, today_beginning):
+def parseEvents(events, today_beginning):
     today_counter = 0
     summary_list = ''
     for event in events:
@@ -73,18 +74,22 @@ def displayOnConsole(events, today_beginning):
         print('No events found for today.')
     else:
         print('Events scheduled for today:')
-        print(summary_list)        
+	#Remove last newline
+        print(summary_list[:-1])        
 
 
 def main():
     outTup = pollingFunction()
-    displayOnConsole(outTup[0], outTup[1])
-
+    parseEvents(outTup[0], outTup[1])
+    lcd.write_to_LCD("TST", outTup[1][11:])
     while True:
         sleeper.sleep(50)
+	lcd.clear_LCD()
         clear()
         outTup = pollingFunction()
-        displayOnConsole(outTup[0], outTup[1])
+        parseEvents(outTup[0], outTup[1])
+	lcd.write_to_LCD(str(outTup[0]), outTup[1])
+	
 
 
 if __name__ == "__main__":
