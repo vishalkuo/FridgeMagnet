@@ -1,7 +1,7 @@
 from __future__ import print_function
 import httplib2
 import os
-
+#import pprint
 from apiclient import discovery
 import oauth2client
 from oauth2client import client
@@ -22,6 +22,7 @@ SCOPES = 'https://www.googleapis.com/auth/calendar.readonly'
 CLIENT_SECRET_FILE = 'Keys/client_secret.json'
 APPLICATION_NAME = 'Fridge Magnet'
 
+#pp = pprint.PrettyPrinter(indent=4)
 
 def get_credentials():
     home_dir = os.path.expanduser('~')
@@ -46,15 +47,14 @@ def pollingFunction():
     service = discovery.build('calendar', 'v3', http=http)
 
     today_beginning = datetime.datetime.combine(date.today(), time())
-    today_end = today_beginning + datetime.timedelta(1, 0) - datetime.timedelta(0, 1)
+    today_end = today_beginning + datetime.timedelta(2, 0) - datetime.timedelta(0,1)
 
     today_beginning = today_beginning.isoformat() + 'Z'
     today_end = today_end.isoformat() + 'Z'
 
     # Initiate event request
     eventsResult = service.events().list(
-        calendarId=cal_id.calendarId, timeMax=today_end, singleEvents=True,
-        orderBy='startTime').execute()
+        calendarId=cal_id.calendarId, singleEvents='True', timeMax=today_end).execute()
 
     return (eventsResult.get('items', []), today_beginning)
 
@@ -65,6 +65,7 @@ def parseEvents(events, today_beginning):
     today_counter = 0
     summary_list = []
     for event in events:
+	#pp.pprint(event)
         dateStr = 'dateTime' if 'dateTime' in event['start'] else 'date'
         if event['start'][dateStr][:10] == today_beginning[:10]:
             start = event['start'].get('dateTime', event['start'].get('date'))
@@ -73,13 +74,12 @@ def parseEvents(events, today_beginning):
     if today_counter == 0:
         print('No events found for today.')
     else:
-        print('Events scheduled for today:')
 	#Remove last newline
         return summary_list
 
 def disp_loop(arr):
 	for item in arr:
-		lcd.write_to_LCD(item[0][11:], item[1])
+		lcd.write_to_LCD(item[0][11:19], item[1])
 		sleeper.sleep(5)
 
 def main():
@@ -89,7 +89,6 @@ def main():
     while True:
         sleeper.sleep(50)
 	lcd.clear_LCD()
-        clear()
         outTup = pollingFunction()
         parseEvents(outTup[0], outTup[1])
 	disp_loop(retArr)
