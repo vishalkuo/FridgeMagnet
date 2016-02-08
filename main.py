@@ -1,7 +1,7 @@
 from __future__ import print_function
 import httplib2
 import os
-
+#import pprint
 from apiclient import discovery
 import oauth2client
 from oauth2client import client
@@ -10,6 +10,7 @@ import Keys.cal_id as cal_id
 import datetime
 from datetime import date, time
 import time as sleeper
+import Hardware.PI2LCD as lcd
 
 try:
     import argparse
@@ -21,6 +22,7 @@ SCOPES = 'https://www.googleapis.com/auth/calendar.readonly'
 CLIENT_SECRET_FILE = 'Keys/client_secret.json'
 APPLICATION_NAME = 'Fridge Magnet'
 
+#pp = pprint.PrettyPrinter(indent=4)
 
 def get_credentials():
     home_dir = os.path.expanduser('~')
@@ -45,41 +47,52 @@ def pollingFunction():
     service = discovery.build('calendar', 'v3', http=http)
 
     today_beginning = datetime.datetime.combine(date.today(), time())
-    today_end = today_beginning + datetime.timedelta(1, 0) - datetime.timedelta(0, 1)
+    today_end = today_beginning + datetime.timedelta(2, 0) - datetime.timedelta(0,1)
 
     today_beginning = today_beginning.isoformat() + 'Z'
     today_end = today_end.isoformat() + 'Z'
 
     # Initiate event request
     eventsResult = service.events().list(
-        calendarId=cal_id.calendarId, timeMax=today_end, singleEvents=True,
-        orderBy='startTime').execute()
+        calendarId=cal_id.calendarId, singleEvents='True', timeMax=today_end).execute()
 
     return (eventsResult.get('items', []), today_beginning)
 
 def clear():
     os.system('cls' if os.name=='nt' else 'clear')
 
-def displayOnConsole(events, today_beginning):
-    if not events:
-        print('No upcoming events found.')
+def parseEvents(events, today_beginning):
+    today_counter = 0
+    summary_list = []
+    for event in events:
+	#pp.pprint(event)
+        dateStr = 'dateTime' if 'dateTime' in event['start'] else 'date'
+        if event['start'][dateStr][:10] == today_beginning[:10]:
+            start = event['start'].get('dateTime', event['start'].get('date'))
+            today_counter = today_counter + 1
+            summary_list.append((start,event['summary']))
+    if today_counter == 0:
+        print('No events found for today.')
     else:
-        print('Events scheduled for today:')
-        for event in events:
-            if event['start']['dateTime'][:10] == today_beginning[:10]:
-                start = event['start'].get('dateTime', event['start'].get('date'))
-                print(start, event['summary'])    
+	#Remove last newline
+        return summary_list
 
+def disp_loop(arr):
+	for item in arr:
+		lcd.write_to_LCD(item[0][11:19], item[1])
+		sleeper.sleep(5)
 
 def main():
     outTup = pollingFunction()
-    displayOnConsole(outTup[0], outTup[1])
-
+    retArr = parseEvents(outTup[0], outTup[1])
+    disp_loop(retArr)
     while True:
         sleeper.sleep(50)
-        clear()
+	lcd.clear_LCD()
         outTup = pollingFunction()
-        displayOnConsole(outTup[0], outTup[1])
+        parseEvents(outTup[0], outTup[1])
+	disp_loop(retArr)
+	
 
 
 if __name__ == "__main__":
