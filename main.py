@@ -1,7 +1,6 @@
 from __future__ import print_function
 import httplib2
 import os
-#import pprint
 from apiclient import discovery
 import oauth2client
 from oauth2client import client
@@ -11,7 +10,9 @@ import datetime
 from datetime import date, time
 import time as sleeper
 import Hardware.PI2LCD as lcd
+import weather_man
 
+kelvin_to_celcius = 272.15
 try:
     import argparse
     flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
@@ -21,8 +22,6 @@ except ImportError:
 SCOPES = 'https://www.googleapis.com/auth/calendar.readonly'
 CLIENT_SECRET_FILE = 'Keys/client_secret.json'
 APPLICATION_NAME = 'Fridge Magnet'
-
-#pp = pprint.PrettyPrinter(indent=4)
 
 def get_credentials():
     home_dir = os.path.expanduser('~')
@@ -93,6 +92,15 @@ def main():
         parseEvents(outTup[0], outTup[1])
 	disp_loop(retArr)
 	
+def weather_report():
+    ret_obj = {}
+    weather_raw = weather_man.main()
+    temp_report = weather_raw['main']
+    descrip = weather_raw['weather'][0]
+    ret_obj['temp'] = round(temp_report['temp'] - kelvin_to_celcius)
+    ret_obj['status'] = descrip['description']
+    return ret_obj
+    
 
 
 if __name__ == "__main__":
