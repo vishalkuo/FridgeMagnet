@@ -13,6 +13,7 @@ import Hardware.PI2LCD as lcd
 import weather_man
 
 kelvin_to_celcius = 272.15
+sleep_time = 50
 try:
     import argparse
     flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
@@ -64,7 +65,6 @@ def parseEvents(events, today_beginning):
     today_counter = 0
     summary_list = []
     for event in events:
-	#pp.pprint(event)
         dateStr = 'dateTime' if 'dateTime' in event['start'] else 'date'
         if event['start'][dateStr][:10] == today_beginning[:10]:
             start = event['start'].get('dateTime', event['start'].get('date'))
@@ -82,15 +82,16 @@ def disp_loop(arr):
 		sleeper.sleep(5)
 
 def main():
-    outTup = pollingFunction()
-    retArr = parseEvents(outTup[0], outTup[1])
-    disp_loop(retArr)
     while True:
-        sleeper.sleep(50)
-	lcd.clear_LCD()
+        lcd.clear_LCD()
         outTup = pollingFunction()
-        parseEvents(outTup[0], outTup[1])
-	disp_loop(retArr)
+        retArr = parseEvents(outTup[0], outTup[1])
+        disp_loop(retArr)
+        sleeper.sleep(sleep_time)
+        lcd.clear_LCD()
+        outWeather = weather_report()
+        lcd.write_to_LCD(outWeather['status'], outWeather['temp'])
+        sleeper.sleep(sleep_time)
 	
 def weather_report():
     ret_obj = {}
